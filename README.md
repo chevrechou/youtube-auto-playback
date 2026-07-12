@@ -1,8 +1,8 @@
 # YouTube Auto-Playback
 
-Keeps YouTube videos playing automatically: resumes paused videos and
-dismisses "Continue watching?" prompts. Toggle on/off by clicking the
-toolbar icon (badge shows ON/OFF).
+Keeps YouTube videos playing automatically: resumes paused videos, loops
+the video when it ends, and dismisses "Continue watching?" prompts. Toggle
+on/off by clicking the toolbar icon (badge shows ON/OFF).
 
 ## Install (unpacked)
 
@@ -17,7 +17,9 @@ toolbar icon (badge shows ON/OFF).
    its own within ~1 second.
 2. Leave a video idle until the "Continue watching?" overlay appears —
    it should auto-dismiss.
-3. Click the toolbar icon — badge should switch to "OFF"; pause a video
+3. Let a video play to the end — it should loop back to the start and
+   keep playing instead of stopping.
+4. Click the toolbar icon — badge should switch to "OFF"; pause a video
    and confirm it now stays paused.
-4. Click the toolbar icon again — badge should switch back to "ON"; confirm
+5. Click the toolbar icon again — badge should switch back to "ON"; confirm
    auto-resume behavior returns.

@@ -6,6 +6,9 @@
   function tick() {
     if (!enabled) return;
     const video = document.querySelector('video');
+    if (video && !video.loop) {
+      video.loop = true;
+    }
     if (isVideoResumable(video)) {
       video.play().catch(() => {});
     }
