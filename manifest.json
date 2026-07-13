@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "YouTube Auto-Playback",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Keeps YouTube videos playing automatically and dismisses pause prompts.",
   "permissions": ["storage"],
-  "host_permissions": ["https://www.youtube.com/*"],
+  "host_permissions": ["https://www.youtube.com/*", "https://*.firebaseio.com/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -24,7 +24,14 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["lib/playback-logic.js", "lib/zen-mode.js", "content.js"],
+      "js": [
+        "lib/playback-logic.js",
+        "lib/zen-mode.js",
+        "lib/watch-together-logic.js",
+        "config.js",
+        "content.js",
+        "watch-together.js"
+      ],
       "run_at": "document_idle"
     }
   ]

@@ -107,6 +107,135 @@
     text-align: center;
     border-top: 1px solid #f0f0f0;
   }
+  .wt-section {
+    padding: 12px 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .wt-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .wt-desc {
+    font-size: 13px;
+    color: #5f5f5f;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .wt-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #cc0000;
+    background: #ffffff;
+    color: #cc0000;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 8px;
+    font-family: inherit;
+  }
+  .wt-btn.primary {
+    background: #cc0000;
+    color: #ffffff;
+  }
+  .wt-btn.secondary {
+    border-color: #e5e5e5;
+    color: #1a1a1a;
+  }
+  .wt-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .wt-btn:focus-visible,
+  .wt-link:focus-visible,
+  .wt-copy:focus-visible {
+    outline: 2px solid #cc0000;
+    outline-offset: 2px;
+  }
+  .wt-code-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .wt-code-row input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .wt-code-row .wt-btn {
+    width: auto;
+    margin: 0;
+    padding: 8px 12px;
+  }
+  .wt-code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .wt-copy {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: normal;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .wt-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .wt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .wt-dot.waiting { background: #c7c7c7; }
+  .wt-dot.connected { background: #2e7d32; }
+  .wt-status-text {
+    font-size: 13px;
+    color: #5f5f5f;
+  }
+  .wt-link {
+    display: inline-block;
+    font-size: 12px;
+    color: #cc0000;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 8px;
+    font-family: inherit;
+  }
+  .wt-error-box {
+    padding: 8px 10px;
+    background: #fdecea;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #b3261e;
+    margin-bottom: 10px;
+  }
+  [hidden] {
+    display: none !important;
+  }
 </style>
 </head>
 <body>
@@ -131,7 +260,36 @@
       <input type="checkbox" role="switch" id="zen-switch" class="switch-input" disabled>
     </div>
   </div>
+  <div class="wt-section">
+    <div class="wt-label">Watch Together</div>
+
+    <div id="wt-error-box" class="wt-error-box" hidden></div>
+
+    <div id="wt-idle" class="wt-idle">
+      <div class="wt-desc">Sync playback with someone else in real time.</div>
+      <button id="wt-create-btn" class="wt-btn primary">Create Room</button>
+      <div class="wt-code-row">
+        <input id="wt-join-input" placeholder="Enter room code" maxlength="6">
+        <button id="wt-join-btn" class="wt-btn secondary" disabled>Join</button>
+      </div>
+    </div>
+
+    <div id="wt-active" class="wt-active" hidden>
+      <div class="wt-code-display">
+        <span id="wt-code-text"></span>
+        <button id="wt-copy-btn" class="wt-copy" type="button">Copy</button>
+      </div>
+      <div class="wt-status-row">
+        <div id="wt-status-dot" class="wt-dot waiting"></div>
+        <div id="wt-status-text" class="wt-status-text">Waiting for someone to join…</div>
+      </div>
+      <button id="wt-regenerate-btn" class="wt-link" type="button" hidden>Generate new code</button>
+      <button id="wt-leave-btn" class="wt-btn secondary">Leave Room</button>
+    </div>
+  </div>
+
   <div class="footer" id="footer"></div>
+  <script src="lib/watch-together-logic.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
