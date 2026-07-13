@@ -7,11 +7,6 @@
 //   - FIREBASE_WEB_API_KEY is Firebase's public web API key, which is
 //     designed to be embedded in client-side code (it identifies the
 //     Firebase project, it does not authorize access on its own).
-//
-// TODO: replace all three placeholder values below once the Worker and
-// Firebase project are actually deployed, and update the matching
-// host_permissions entries in manifest.json (see the worker.workers.dev
-// placeholder there too).
-const WORKER_BASE_URL = 'https://REPLACE-ME.workers.dev';
-const FIREBASE_DATABASE_URL = 'https://REPLACE-ME-default-rtdb.firebaseio.com';
-const FIREBASE_WEB_API_KEY = 'REPLACE-ME';
+const WORKER_BASE_URL = 'https://watch-together-worker.michaelyuanhao.workers.dev';
+const FIREBASE_DATABASE_URL = 'https://auto-playback-default-rtdb.firebaseio.com';
+const FIREBASE_WEB_API_KEY = 'AIzaSyBOQEzZ1qFebQmMwJlOVc2KVzkhEc70J0s';

@@ -7,7 +7,7 @@
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://*.firebaseio.com/*",
-    "https://REPLACE-ME.workers.dev/*",
+    "https://watch-together-worker.michaelyuanhao.workers.dev/*",
     "https://identitytoolkit.googleapis.com/*",
     "https://securetoken.googleapis.com/*"
   ],

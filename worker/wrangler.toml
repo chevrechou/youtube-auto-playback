@@ -5,19 +5,13 @@ compatibility_date = "2024-11-01"
 # All routes are under /watch-together/* — see src/index.js for the router.
 
 [vars]
-# Placeholder — the real Firebase project doesn't exist yet. The developer must
-# replace this with their real Realtime Database URL once they've set up the
-# shared Firebase project (see README.md's "Watch Together backend setup" section).
-FIREBASE_DATABASE_URL = "https://REPLACE-ME-default-rtdb.firebaseio.com"
+FIREBASE_DATABASE_URL = "https://auto-playback-default-rtdb.firebaseio.com"
 
-# Rate limiting + kill-switch storage. Create with:
-#   npx wrangler kv namespace create WATCH_TOGETHER_KV
-# then paste the returned id below (and add a second block with preview_id for
-# `wrangler dev`, from `npx wrangler kv namespace create WATCH_TOGETHER_KV --preview`).
+# Rate limiting + kill-switch storage.
 [[kv_namespaces]]
 binding = "WATCH_TOGETHER_KV"
-id = "REPLACE_ME_KV_NAMESPACE_ID"
-preview_id = "REPLACE_ME_KV_PREVIEW_NAMESPACE_ID"
+id = "19709e2fbeac43cdae2461b2b7335b45"
+preview_id = "ee1dc5a7dee94f299c4fbbe323a53891"
 
 # Hourly cleanup of stale rooms (state/updatedAt older than 24h).
 # Requires a Firebase RTDB `.indexOn: ["state/updatedAt"]` rule declared at the
