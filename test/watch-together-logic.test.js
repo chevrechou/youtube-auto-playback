@@ -6,6 +6,7 @@ const {
   shouldApplyUpdate,
   isRoomFull,
   isParticipantStale,
+  isFirebaseConfigured,
 } = require('../lib/watch-together-logic.js');
 
 test('generateRoomCode returns a 6-character uppercase alphanumeric code', () => {
@@ -74,4 +75,16 @@ test('isParticipantStale returns true when lastSeen is older than the timeout', 
 
 test('isParticipantStale returns false when lastSeen is within the timeout', () => {
   assert.strictEqual(isParticipantStale(1000, 30000, 60000), false);
+});
+
+test('isFirebaseConfigured returns false for the empty-string placeholder', () => {
+  assert.strictEqual(isFirebaseConfigured(''), false);
+});
+
+test('isFirebaseConfigured returns false for whitespace-only value', () => {
+  assert.strictEqual(isFirebaseConfigured('   '), false);
+});
+
+test('isFirebaseConfigured returns true for a real database URL', () => {
+  assert.strictEqual(isFirebaseConfigured('https://my-project-default-rtdb.firebaseio.com'), true);
 });

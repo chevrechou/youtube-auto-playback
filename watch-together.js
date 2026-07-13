@@ -122,6 +122,10 @@
   }
 
   async function createRoom(code) {
+    if (!isFirebaseConfigured(FIREBASE_DATABASE_URL)) {
+      setStatus('error', 'not-configured');
+      return;
+    }
     clientId = randomClientId();
     roomCode = code;
     setStatus('creating');
@@ -148,6 +152,10 @@
   }
 
   async function joinRoom(code) {
+    if (!isFirebaseConfigured(FIREBASE_DATABASE_URL)) {
+      setStatus('error', 'not-configured');
+      return;
+    }
     clientId = randomClientId();
     roomCode = code;
     setStatus('joining');

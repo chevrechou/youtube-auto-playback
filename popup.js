@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectivity: "Couldn't connect. Check your connection and try again.",
     'not-found': "Room not found. Check the code and try again.",
     full: 'Room is full.',
+    'not-configured': "Watch Together needs a one-time setup — see README.md's Firebase setup section.",
   };
 
   function renderWatchTogether({ watchTogetherRoomCode, watchTogetherStatus, watchTogetherErrorType }) {
