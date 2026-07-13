@@ -4,7 +4,13 @@
   "version": "1.2.0",
   "description": "Keeps YouTube videos playing automatically and dismisses pause prompts.",
   "permissions": ["storage"],
-  "host_permissions": ["https://www.youtube.com/*", "https://*.firebaseio.com/*"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://*.firebaseio.com/*",
+    "https://REPLACE-ME.workers.dev/*",
+    "https://identitytoolkit.googleapis.com/*",
+    "https://securetoken.googleapis.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -28,7 +34,7 @@
         "lib/playback-logic.js",
         "lib/zen-mode.js",
         "lib/watch-together-logic.js",
-        "config.js",
+        "constants.js",
         "content.js",
         "watch-together.js"
       ],

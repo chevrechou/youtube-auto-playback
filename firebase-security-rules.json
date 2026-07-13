@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "_comment": "Reference/documentation artifact — Firebase does not read this file automatically. Paste this whole JSON object into the Firebase console's Realtime Database > Rules tab (see README.md's 'Watch Together backend setup' section). These rules govern ONLY the extension client's direct access, which is authenticated with a Worker-issued custom-token-derived ID token carrying a `roomCode` custom claim. The Worker itself writes using its Firebase Admin SDK (service-account) credentials, which are an admin-equivalent identity that always bypasses Realtime Database security rules entirely — the rules below never apply to the Worker's own reads/writes.",
+    "rooms": {
+      ".indexOn": ["state/updatedAt"],
+      "$roomCode": {
+        ".read": "auth != null && auth.token.roomCode === $roomCode",
+        ".write": "auth != null && auth.token.roomCode === $roomCode"
+      }
+    }
+  }
+}

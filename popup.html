@@ -233,6 +233,22 @@
     color: #b3261e;
     margin-bottom: 10px;
   }
+  .wt-banner-box {
+    padding: 8px 10px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+  .wt-banner-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .wt-banner-actions .wt-btn {
+    margin-bottom: 0;
+  }
   [hidden] {
     display: none !important;
   }
@@ -263,7 +279,19 @@
   <div class="wt-section">
     <div class="wt-label">Watch Together</div>
 
+    <div id="wt-deep-link-banner" class="wt-banner-box" hidden>
+      <div id="wt-deep-link-text"></div>
+      <div class="wt-banner-actions">
+        <button id="wt-deep-link-confirm-btn" class="wt-btn primary" type="button">Join new room</button>
+        <button id="wt-deep-link-dismiss-btn" class="wt-btn secondary" type="button">Dismiss</button>
+      </div>
+    </div>
+
     <div id="wt-error-box" class="wt-error-box" hidden></div>
+
+    <div id="wt-disabled-box" class="wt-error-box" hidden>
+      Watch Together is temporarily unavailable. Please check back later.
+    </div>
 
     <div id="wt-idle" class="wt-idle">
       <div class="wt-desc">Sync playback with someone else in real time.</div>
@@ -283,6 +311,7 @@
         <div id="wt-status-dot" class="wt-dot waiting"></div>
         <div id="wt-status-text" class="wt-status-text">Waiting for someone to join…</div>
       </div>
+      <button id="wt-share-btn" class="wt-link" type="button">Copy invite link</button>
       <button id="wt-regenerate-btn" class="wt-link" type="button" hidden>Generate new code</button>
       <button id="wt-leave-btn" class="wt-btn secondary">Leave Room</button>
     </div>
@@ -290,6 +319,7 @@
 
   <div class="footer" id="footer"></div>
   <script src="lib/watch-together-logic.js"></script>
+  <script src="constants.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

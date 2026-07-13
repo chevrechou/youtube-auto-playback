@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Watch Together ---
   const wtErrorBox = document.getElementById('wt-error-box');
+  const wtDisabledBox = document.getElementById('wt-disabled-box');
   const wtIdle = document.getElementById('wt-idle');
   const wtActive = document.getElementById('wt-active');
   const wtCreateBtn = document.getElementById('wt-create-btn');
@@ -54,23 +55,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const wtJoinBtn = document.getElementById('wt-join-btn');
   const wtCodeText = document.getElementById('wt-code-text');
   const wtCopyBtn = document.getElementById('wt-copy-btn');
+  const wtShareBtn = document.getElementById('wt-share-btn');
   const wtStatusDot = document.getElementById('wt-status-dot');
   const wtStatusText = document.getElementById('wt-status-text');
   const wtRegenerateBtn = document.getElementById('wt-regenerate-btn');
   const wtLeaveBtn = document.getElementById('wt-leave-btn');
+  const wtDeepLinkBanner = document.getElementById('wt-deep-link-banner');
+  const wtDeepLinkText = document.getElementById('wt-deep-link-text');
+  const wtDeepLinkConfirmBtn = document.getElementById('wt-deep-link-confirm-btn');
+  const wtDeepLinkDismissBtn = document.getElementById('wt-deep-link-dismiss-btn');
+
+  let watchTogetherDisabled = false;
 
   const ERROR_MESSAGES = {
     connectivity: "Couldn't connect. Check your connection and try again.",
-    'not-found': "Room not found. Check the code and try again.",
-    full: 'Room is full.',
-    'not-configured': "Watch Together needs a one-time setup — see README.md's Firebase setup section.",
+    invalid_video_id: "This doesn't look like a YouTube video page. Open a video first.",
+    invalid_room_code: "That room code doesn't look right. Check it and try again.",
+    backend_unavailable: "Watch Together's servers are having trouble. Try again shortly.",
+    service_disabled: 'Watch Together is temporarily unavailable.',
+    room_not_found: 'Room not found. Check the code and try again.',
+    room_full: 'Room is full.',
+    not_a_participant: "You've been disconnected from this room. Try joining again.",
   };
 
-  function renderWatchTogether({ watchTogetherRoomCode, watchTogetherStatus, watchTogetherErrorType }) {
+  function rateLimitMessage(retryAfterSeconds) {
+    const minutes = Math.max(1, Math.round((retryAfterSeconds || 0) / 60));
+    return `Too many attempts — try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`;
+  }
+
+  function errorMessageFor(errorType, retryAfterSeconds) {
+    if (errorType === 'rate_limited') return rateLimitMessage(retryAfterSeconds);
+    return ERROR_MESSAGES[errorType] || ERROR_MESSAGES.connectivity;
+  }
+
+  function renderWatchTogether({
+    watchTogetherRoomCode,
+    watchTogetherStatus,
+    watchTogetherErrorType,
+    watchTogetherRetryAfterSeconds,
+    watchTogetherPendingDeepLink,
+  }) {
     const status = watchTogetherStatus || 'idle';
 
+    // Deep-link conflict banner — surfaced regardless of kill-switch state,
+    // since dismissing/confirming should always be available.
+    if (watchTogetherPendingDeepLink && watchTogetherPendingDeepLink.roomCode) {
+      wtDeepLinkText.textContent = `You're in room ${watchTogetherPendingDeepLink.fromRoomCode} — join room ${watchTogetherPendingDeepLink.roomCode} instead?`;
+      wtDeepLinkBanner.hidden = false;
+    } else {
+      wtDeepLinkBanner.hidden = true;
+    }
+
+    if (watchTogetherDisabled) {
+      wtDisabledBox.hidden = false;
+      wtErrorBox.hidden = true;
+      wtIdle.hidden = true;
+      wtActive.hidden = true;
+      return;
+    }
+    wtDisabledBox.hidden = true;
+
     if (status === 'error') {
-      wtErrorBox.textContent = ERROR_MESSAGES[watchTogetherErrorType] || ERROR_MESSAGES.connectivity;
+      wtErrorBox.textContent = errorMessageFor(watchTogetherErrorType, watchTogetherRetryAfterSeconds);
       wtErrorBox.hidden = false;
     } else {
       wtErrorBox.hidden = true;
@@ -115,19 +161,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadWatchTogetherState() {
     chrome.storage.local.get(
-      { watchTogetherRoomCode: null, watchTogetherStatus: 'idle', watchTogetherErrorType: null },
+      {
+        watchTogetherRoomCode: null,
+        watchTogetherStatus: 'idle',
+        watchTogetherErrorType: null,
+        watchTogetherRetryAfterSeconds: null,
+        watchTogetherPendingDeepLink: null,
+      },
       renderWatchTogether
     );
   }
 
   loadWatchTogetherState();
 
+  // Kill switch: ask the Worker once per popup open whether Watch Together
+  // is disabled. The section itself always stays visible either way.
+  fetch(`${WORKER_BASE_URL}/watch-together/status`)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      watchTogetherDisabled = Boolean(data && data.disabled);
+      loadWatchTogetherState();
+    })
+    .catch(() => {
+      // Can't reach the Worker to check — don't block the UI on it; normal
+      // create/join attempts will surface their own connectivity errors.
+    });
+
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     if (
       Object.prototype.hasOwnProperty.call(changes, 'watchTogetherRoomCode') ||
       Object.prototype.hasOwnProperty.call(changes, 'watchTogetherStatus') ||
-      Object.prototype.hasOwnProperty.call(changes, 'watchTogetherErrorType')
+      Object.prototype.hasOwnProperty.call(changes, 'watchTogetherErrorType') ||
+      Object.prototype.hasOwnProperty.call(changes, 'watchTogetherRetryAfterSeconds') ||
+      Object.prototype.hasOwnProperty.call(changes, 'watchTogetherPendingDeepLink')
     ) {
       loadWatchTogetherState();
     }
@@ -140,12 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
   wtCreateBtn.addEventListener('click', () => {
     wtCreateBtn.disabled = true;
     wtCreateBtn.textContent = 'Creating…';
-    const code = generateRoomCode();
     chrome.storage.local.set({
-      watchTogetherRoomCode: code,
+      watchTogetherRoomCode: null,
       watchTogetherIntent: 'create',
       watchTogetherStatus: 'creating',
       watchTogetherErrorType: null,
+      watchTogetherRequestNonce: Date.now(),
     });
   });
 
@@ -159,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       watchTogetherIntent: 'join',
       watchTogetherStatus: 'joining',
       watchTogetherErrorType: null,
+      watchTogetherRequestNonce: Date.now(),
     });
   });
 
@@ -172,12 +240,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   wtRegenerateBtn.addEventListener('click', () => {
-    const code = generateRoomCode();
     chrome.storage.local.set({
-      watchTogetherRoomCode: code,
+      watchTogetherRoomCode: null,
       watchTogetherIntent: 'create',
       watchTogetherStatus: 'creating',
       watchTogetherErrorType: null,
+      watchTogetherRequestNonce: Date.now(),
     });
   });
 
@@ -189,5 +257,49 @@ document.addEventListener('DOMContentLoaded', () => {
         wtCopyBtn.textContent = original;
       }, 2000);
     });
+  });
+
+  wtShareBtn.addEventListener('click', () => {
+    const roomCode = wtCodeText.textContent;
+    if (!roomCode) return;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs && tabs[0];
+      let videoId = null;
+      if (tab && tab.url) {
+        try {
+          videoId = new URL(tab.url).searchParams.get('v');
+        } catch (err) {
+          videoId = null;
+        }
+      }
+      if (!isValidVideoId(videoId)) return;
+      const link = `https://www.youtube.com/watch?v=${videoId}&wtRoom=${roomCode}`;
+      navigator.clipboard.writeText(link).then(() => {
+        const original = wtShareBtn.textContent;
+        wtShareBtn.textContent = 'Link copied!';
+        setTimeout(() => {
+          wtShareBtn.textContent = original;
+        }, 2000);
+      });
+    });
+  });
+
+  wtDeepLinkConfirmBtn.addEventListener('click', () => {
+    chrome.storage.local.get({ watchTogetherPendingDeepLink: null }, (result) => {
+      const pending = result.watchTogetherPendingDeepLink;
+      if (!pending || !pending.roomCode) return;
+      chrome.storage.local.set({
+        watchTogetherRoomCode: pending.roomCode,
+        watchTogetherIntent: 'join',
+        watchTogetherStatus: 'joining',
+        watchTogetherErrorType: null,
+        watchTogetherRequestNonce: Date.now(),
+        watchTogetherPendingDeepLink: null,
+      });
+    });
+  });
+
+  wtDeepLinkDismissBtn.addEventListener('click', () => {
+    chrome.storage.local.set({ watchTogetherPendingDeepLink: null });
   });
 });

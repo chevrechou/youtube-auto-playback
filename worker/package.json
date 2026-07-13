@@ -1,0 +1,22 @@
+{
+  "name": "watch-together-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker backend for YouTube Auto-Playback's Watch Together feature: gatekeeps room creation/joining (rate limiting, validation, minting scoped Firebase custom tokens). Real-time sync happens directly between the extension and Firebase Realtime Database.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run --outdir /tmp/watch-together-worker-dryrun"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.6.4",
+    "vitest": "~2.1.9",
+    "wrangler": "^3.90.0"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  }
+}

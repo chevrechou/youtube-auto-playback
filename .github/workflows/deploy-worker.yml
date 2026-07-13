@@ -1,0 +1,65 @@
+name: Deploy Worker
+
+# Only redeploy the Watch Together Cloudflare Worker when something under
+# worker/ actually changes on main. Unrelated extension-only commits
+# (content.js, popup.js, etc.) should not trigger a Worker deploy.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'worker/**'
+
+jobs:
+  deploy:
+    name: Test and deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install worker dependencies
+        working-directory: worker
+        run: npm install
+
+      # CI gate: the deploy step below only runs if this step exits 0.
+      #
+      # NOTE on FIREBASE_TEST_SERVICE_ACCOUNT_KEY: the worker's test suite is
+      # expected to mock the Firebase Admin SDK entirely (no real network
+      # calls to any Firebase project), so no Firebase secret is wired into
+      # this step and that secret does not need to exist in this repo's
+      # Actions secrets. If the worker's tests are ever changed to hit a real
+      # test-tier Firebase project instead of mocking it, add a
+      # `FIREBASE_TEST_SERVICE_ACCOUNT_KEY` repo secret and pass it here, e.g.:
+      #   env:
+      #     FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_TEST_SERVICE_ACCOUNT_KEY }}
+      - name: Run worker test suite
+        working-directory: worker
+        run: npm test
+
+      # Deploys via wrangler. Uses cloudflare/wrangler-action, the current
+      # recommended pattern for running wrangler in CI: it authenticates
+      # non-interactively from `apiToken`, and its `secrets` input sets named
+      # Worker secrets non-interactively (equivalent to
+      # `wrangler secret put FIREBASE_SERVICE_ACCOUNT_KEY` without a TTY
+      # prompt) by reading same-named env vars, before running `command`.
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: worker
+          secrets: |
+            FIREBASE_SERVICE_ACCOUNT_KEY
+          command: deploy
+        env:
+          # Production Firebase project's service-account JSON. Distinct from
+          # FIREBASE_TEST_SERVICE_ACCOUNT_KEY (test-tier project, used only by
+          # `npm test` above if/when that suite stops mocking Firebase).
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_PROD_SERVICE_ACCOUNT_KEY }}

@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const {
   generateRoomCode,
   isValidRoomCode,
+  isValidVideoId,
   shouldApplyUpdate,
   isRoomFull,
   isParticipantStale,
@@ -35,6 +36,33 @@ test('isValidRoomCode rejects non-alphanumeric characters', () => {
 
 test('isValidRoomCode rejects empty string', () => {
   assert.strictEqual(isValidRoomCode(''), false);
+});
+
+test('isValidVideoId accepts an 11-character YouTube video id', () => {
+  assert.strictEqual(isValidVideoId('dQw4w9WgXcQ'), true);
+});
+
+test('isValidVideoId accepts ids containing underscores and hyphens', () => {
+  assert.strictEqual(isValidVideoId('a_B-9zZ01_-'), true);
+});
+
+test('isValidVideoId rejects wrong length', () => {
+  assert.strictEqual(isValidVideoId('short'), false);
+  assert.strictEqual(isValidVideoId('waytoolongvideoid123'), false);
+});
+
+test('isValidVideoId rejects disallowed characters', () => {
+  assert.strictEqual(isValidVideoId('dQw4w9Wg!cQ'), false);
+});
+
+test('isValidVideoId rejects non-string input', () => {
+  assert.strictEqual(isValidVideoId(null), false);
+  assert.strictEqual(isValidVideoId(undefined), false);
+  assert.strictEqual(isValidVideoId(12345678901), false);
+});
+
+test('isValidVideoId rejects empty string', () => {
+  assert.strictEqual(isValidVideoId(''), false);
 });
 
 test('shouldApplyUpdate returns true when updatedBy differs from own client id', () => {
