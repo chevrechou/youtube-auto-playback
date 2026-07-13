@@ -9,12 +9,16 @@ all three controls (badge shows Auto-Playback's ON/OFF state).
 
 ## Install (unpacked)
 
-1. Open `chrome://extensions`.
-2. Enable "Developer mode" (top-right toggle).
-3. Click "Load unpacked".
-4. Select this folder (`youtube-auto-playback`).
-5. If you want to use Watch Together, complete the Firebase setup below
-   first — Auto-Playback and Zen Mode work without it.
+1. Copy `config.example.js` to a new file named `config.js` in this
+   folder. **This step is required even if you don't plan to use Watch
+   Together** — `manifest.json` references `config.js` directly, and
+   Chrome refuses to load the extension at all if a listed file is
+   missing. The placeholder value is fine for Auto-Playback and Zen Mode;
+   only Watch Together needs a real URL in it (see Firebase setup below).
+2. Open `chrome://extensions`.
+3. Enable "Developer mode" (top-right toggle).
+4. Click "Load unpacked".
+5. Select this folder (`youtube-auto-playback`).
 
 ## Firebase setup (required for Watch Together only)
 
@@ -25,8 +29,9 @@ Watch Together syncs playback through a free Firebase Realtime Database.
    to it (not Firestore — the older Realtime Database product).
 2. Copy the database's URL, shown in the console (looks like
    `https://your-project-default-rtdb.firebaseio.com`).
-3. Open `config.js` in this folder and set `FIREBASE_DATABASE_URL` to that
-   URL.
+3. In your local `config.js` (from step 1 above — this file is
+   gitignored, so your URL stays local and is never committed), set
+   `FIREBASE_DATABASE_URL` to that URL.
 4. In the Realtime Database's **Rules** tab, set rules that only allow
    reading/writing a specific known room path, and never allow listing
    the top-level `rooms` collection — for example:
