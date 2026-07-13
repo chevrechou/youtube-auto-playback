@@ -25,3 +25,24 @@ record before it's forgotten.
 
 **Depends on:** `lib/zen-mode.js` and its selector list existing first
 (part of the Zen Mode plan).
+
+## Watch Together: same user joining from multiple tabs
+
+**What:** Handle the case where a user has multiple YouTube tabs open and
+more than one tries to join the same Watch Together room.
+
+**Why:** Each tab currently gets its own client ID, so a single person
+with 2 tabs open could accidentally consume both slots in their own
+2-person room, then get a confusing "room is full" error against
+themselves.
+
+**Pros:** Prevents that confusing self-lockout scenario.
+
+**Cons:** Requires some way to recognize "these two client IDs are
+actually the same browser" — not trivial, and low-frequency in practice.
+
+**Context:** Surfaced during Watch Together's eng review (2026-07-12).
+Not blocking Plan 1 — worth revisiting if it turns out to bite real
+users.
+
+**Depends on:** Watch Together Plan 1 shipping first.
