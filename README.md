@@ -38,20 +38,27 @@ shared backend, done once, not per-installer.
    (not Firestore — the older Realtime Database product). Note the
    database's URL, shown in the console (looks like
    `https://your-project-default-rtdb.firebaseio.com`).
-2. **Apply the security rules.** Open the Realtime Database's **Rules** tab
+2. **Enable Authentication.** In the Firebase console, go to
+   **Build → Authentication** and click **"Get started."** This is a
+   separate step from registering a web app (step 7) — without it,
+   `signInWithCustomToken` fails with `CONFIGURATION_NOT_FOUND` even
+   though the custom token itself is valid. No specific sign-in provider
+   needs to be enabled; custom-token sign-in works as soon as
+   Authentication is initialized.
+3. **Apply the security rules.** Open the Realtime Database's **Rules** tab
    and paste in the contents of
    [`firebase-security-rules.json`](./firebase-security-rules.json) from
    this repo. Those rules scope every room so only a client whose auth
    token carries a matching `roomCode` claim can read or write it, with no
    rule allowing the top-level `rooms` collection to be listed or scanned.
-3. **Generate a service-account key.** In the Firebase console, go to
+4. **Generate a service-account key.** In the Firebase console, go to
    **Project Settings → Service Accounts → Generate new private key**.
    This downloads a JSON key the Worker uses to mint per-room custom
    tokens and perform admin writes — this key is an admin-equivalent
-   credential that bypasses the security rules from step 2 (that's
+   credential that bypasses the security rules from step 3 (that's
    expected; the rules only constrain the extension client, not the
    Worker).
-4. **Set up Cloudflare.** Create a free
+5. **Set up Cloudflare.** Create a free
    [Cloudflare](https://dash.cloudflare.com/sign-up) account and install
    the `wrangler` CLI (`npm install -g wrangler`, or use `npx wrangler`
    without a global install). Create the KV namespace the Worker uses for
@@ -60,14 +67,14 @@ shared backend, done once, not per-installer.
    wrangler kv:namespace create WATCH_TOGETHER_KV
    ```
    Copy the namespace ID it prints into `worker/wrangler.toml`.
-5. **Set the Worker's Firebase secret.** From inside `worker/`:
+6. **Set the Worker's Firebase secret.** From inside `worker/`:
    ```
    cd worker
    wrangler secret put FIREBASE_SERVICE_ACCOUNT_KEY
    ```
-   Paste the full contents of the service-account JSON from step 3 when
+   Paste the full contents of the service-account JSON from step 4 when
    prompted.
-6. **Deploy once manually** to get the Worker's live URL:
+7. **Deploy once manually** to get the Worker's live URL:
    ```
    cd worker
    npx wrangler deploy
@@ -75,24 +82,24 @@ shared backend, done once, not per-installer.
    Wrangler prints the deployed Worker's URL (something like
    `https://watch-together.<your-subdomain>.workers.dev`) — you'll need it
    next.
-7. **Update the extension's constants.** In `constants.js`, set
-   `WORKER_BASE_URL` to the URL from step 6, and set
+8. **Update the extension's constants.** In `constants.js`, set
+   `WORKER_BASE_URL` to the URL from step 7, and set
    `FIREBASE_DATABASE_URL` / `FIREBASE_WEB_API_KEY` to this project's
    database URL (step 1) and its web API key (Firebase console →
    **Project Settings → General → Web API Key**).
-8. **Update `manifest.json`'s `host_permissions`**, replacing the
-   placeholder Worker domain with the real one from step 6, so the
+9. **Update `manifest.json`'s `host_permissions`**, replacing the
+   placeholder Worker domain with the real one from step 7, so the
    extension is permitted to call it.
-9. **Wire up auto-deploy.** Add two repository secrets under
+10. **Wire up auto-deploy.** Add two repository secrets under
    **Settings → Secrets and variables → Actions** so future pushes that
    touch `worker/**` deploy automatically via
    [`.github/workflows/deploy-worker.yml`](./.github/workflows/deploy-worker.yml):
    - `CLOUDFLARE_API_TOKEN` — a Cloudflare API token with permission to
      edit Workers scripts.
    - `FIREBASE_PROD_SERVICE_ACCOUNT_KEY` — the same service-account JSON
-     from step 3, so CI can push it as the Worker's secret on every
+     from step 4, so CI can push it as the Worker's secret on every
      deploy.
-10. **Set up spend alerts as a safeguard.** Both platforms have a generous
+11. **Set up spend alerts as a safeguard.** Both platforms have a generous
     free tier, but it's worth capping surprises:
     - Cloudflare: **dash.cloudflare.com → Billing → Notifications**, add a
       usage alert.
