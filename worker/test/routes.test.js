@@ -36,8 +36,8 @@ function stubFetch(handler) {
 
 async function resetKv() {
   await setServiceDisabled(env.WATCH_TOGETHER_KV, false);
-  for (const route of ['create', 'join']) {
-    for (const ip of ['203.0.113.1', '203.0.113.2', '203.0.113.3']) {
+  for (const route of ['create', 'join', 'refresh']) {
+    for (const ip of ['203.0.113.1', '203.0.113.2', '203.0.113.3', '203.0.113.4']) {
       await env.WATCH_TOGETHER_KV.delete(`ratelimit:${route}:${ip}`);
     }
   }
@@ -310,6 +310,50 @@ describe('POST /watch-together/refresh', () => {
       env
     );
     expect(res.status).toBe(503);
+  });
+
+  it('403s a clientId over the max length instead of minting a token for it', async () => {
+    const res = await handleRequest(
+      req('/watch-together/refresh', { method: 'POST', body: { roomCode: 'AB12CD', clientId: 'x'.repeat(129) } }),
+      env
+    );
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'not_a_participant' });
+  });
+
+  it('429s after exceeding the refresh rate limit for an IP', async () => {
+    stubFetch(() =>
+      new Response(
+        JSON.stringify({
+          state: { videoId: 'dQw4w9WgXcQ', currentTime: 0, isPaused: true },
+          participants: { 'client-abc': Date.now() },
+        }),
+        { status: 200 }
+      )
+    );
+    for (let i = 0; i < RATE_LIMITS.refresh; i++) {
+      const ok = await handleRequest(
+        req('/watch-together/refresh', {
+          method: 'POST',
+          body: { roomCode: 'AB12CD', clientId: 'client-abc' },
+          ip: '203.0.113.4',
+        }),
+        env
+      );
+      expect(ok.status).toBe(200);
+    }
+    const blocked = await handleRequest(
+      req('/watch-together/refresh', {
+        method: 'POST',
+        body: { roomCode: 'AB12CD', clientId: 'client-abc' },
+        ip: '203.0.113.4',
+      }),
+      env
+    );
+    expect(blocked.status).toBe(429);
+    const blockedBody = await blocked.json();
+    expect(blockedBody.error).toBe('rate_limited');
+    expect(blockedBody.retryAfterSeconds).toBeGreaterThan(0);
   });
 });
 

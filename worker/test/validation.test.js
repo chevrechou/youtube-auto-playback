@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isValidVideoId, isValidRoomCode } from '../src/validation.js';
+import { isValidVideoId, isValidRoomCode, isValidClientId } from '../src/validation.js';
 
 describe('isValidVideoId', () => {
   it('accepts a well-formed 11-char YouTube video id', () => {
@@ -40,5 +40,26 @@ describe('isValidRoomCode', () => {
   it('rejects non-string input', () => {
     expect(isValidRoomCode(undefined)).toBe(false);
     expect(isValidRoomCode(123456)).toBe(false);
+  });
+});
+
+describe('isValidClientId', () => {
+  it('accepts a realistic client id', () => {
+    expect(isValidClientId('client-abc123-1700000000000')).toBe(true);
+  });
+
+  it('rejects empty string', () => {
+    expect(isValidClientId('')).toBe(false);
+  });
+
+  it('accepts exactly the max length and rejects one over it', () => {
+    expect(isValidClientId('x'.repeat(128))).toBe(true);
+    expect(isValidClientId('x'.repeat(129))).toBe(false);
+  });
+
+  it('rejects non-string input', () => {
+    expect(isValidClientId(undefined)).toBe(false);
+    expect(isValidClientId(null)).toBe(false);
+    expect(isValidClientId(12345)).toBe(false);
   });
 });

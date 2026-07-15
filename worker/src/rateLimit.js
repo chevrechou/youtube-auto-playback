@@ -11,6 +11,11 @@ const WINDOW_MS = 60 * 60 * 1000; // 1 hour
 export const RATE_LIMITS = {
   create: 5,
   join: 20,
+  // Legitimate refresh cadence is ~once per 50 minutes per session (see
+  // TOKEN_REFRESH_BUFFER_SECONDS in watch-together.js). 30/hour comfortably
+  // covers proactive + reactive (401-triggered) refreshes even across a few
+  // reconnects, while still bounding repeated-signing abuse from a single IP.
+  refresh: 30,
 };
 
 function keyFor(route, ip) {

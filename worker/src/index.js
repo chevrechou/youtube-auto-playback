@@ -20,7 +20,7 @@
 // underlying condition and self-describing — flagged here for the client
 // team in case they want an explicit branch for it.
 
-import { isValidVideoId, isValidRoomCode, isNonEmptyString } from './validation.js';
+import { isValidVideoId, isValidRoomCode, isValidClientId } from './validation.js';
 import { generateRoomCode } from './roomCode.js';
 import { checkRateLimit } from './rateLimit.js';
 import { isServiceDisabled, recordSigningFailure, recordSigningSuccess } from './killSwitch.js';
@@ -198,11 +198,17 @@ async function handleRefresh(request, env) {
   const body = await readJsonBody(request);
   const { roomCode, clientId } = body;
 
-  if (!isValidRoomCode(roomCode) || !isNonEmptyString(clientId)) {
+  if (!isValidRoomCode(roomCode) || !isValidClientId(clientId)) {
     // Not in the documented contract for /refresh (only 403/503 are
     // specified) — malformed input can't correspond to a real participant
     // either way, so we fold it into the same "not a participant" response.
     return json(403, { error: 'not_a_participant' });
+  }
+
+  const ip = clientIp(request);
+  const rateLimitResult = await checkRateLimit(env.WATCH_TOGETHER_KV, 'refresh', ip);
+  if (!rateLimitResult.allowed) {
+    return json(429, { error: 'rate_limited', retryAfterSeconds: rateLimitResult.retryAfterSeconds });
   }
 
   let serviceAccount;

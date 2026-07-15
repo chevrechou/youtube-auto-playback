@@ -21,6 +21,11 @@ export function isValidRoomCode(roomCode) {
   return typeof roomCode === 'string' && ROOM_CODE_PATTERN.test(roomCode);
 }
 
-export function isNonEmptyString(value) {
-  return typeof value === 'string' && value.length > 0;
+// Real client IDs (see randomClientId() in ../../watch-together.js) are
+// well under 64 chars. The cap exists to bound the size of attacker-supplied
+// input on the unauthenticated /refresh route, not to fit a realistic ID.
+const MAX_CLIENT_ID_LENGTH = 128;
+
+export function isValidClientId(value) {
+  return typeof value === 'string' && value.length > 0 && value.length <= MAX_CLIENT_ID_LENGTH;
 }
